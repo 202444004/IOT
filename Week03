@@ -1,0 +1,78 @@
+
+
+int Vo = A0;
+int V_led = 12;
+
+float Vo_value=0;
+float Voltage = 0;
+float dustDensity = 0;
+
+void setup(){
+  Serial.begin(9600);
+  pinMode(V_led, OUTPUT);
+  pinMode(Vo, INPUT);
+}
+void loop(){
+  digitalWrite(V_led, LOW);
+  delayMicroseconds(280);
+  Vo_value = analogRead(Vo);
+  delayMicroseconds(40);
+  digitalWrite(V_led, HIGH);
+  delayMicroseconds(9680);
+
+  Voltage = Vo_value*5.0 / 1023.0;
+  dustDensity = (Voltage - 0.5)/0.005;
+
+  Serial.print("dust=");
+  Serial.println(dustDensity);
+
+  delay(1000);
+}
+
+
+import serial
+from influxdb_client import InfluxDBClient
+import time
+
+serial_port = "COM16"
+baud_rate = 9600
+timeout = 2
+
+#설정
+influxdb_url = "http://localhost:8086"
+influxdb_token = "f2Aj-McHmze6mYj2O9xjgmgw60BqudkEW_75U10pTBoxkMCtDIgUO5x5xeayOQML78NZmrYeCrQ5kAg00uMINw=="
+inpluxdb_org = "test"
+influxdb_bucket = "dust"
+
+#클라이언트 초기화
+client = InfluxDBClient(url=influxdb_url, token=influxdb_token, org=inpluxdb_org)
+write_api = client.write_api()
+
+#시리얼 포트열기
+try:
+    ser = serial.Serial(serial_port, baud_rate, timeout = timeout)
+    print(f"Connected to {serial_port} at {baud_rate} baud")
+except:
+    print("Failed to connect to serial port")
+    exit()
+
+try:
+    while True:
+        if ser.in_waiting > 0:
+            line = ser.readline().decode('utf-8').strip()
+
+            if "=" in line:
+                key, value = line.split("=")
+                try:
+                    value = float(value)
+                    data = f"sensor_data,device=arduino {key}={value}"
+                    write_api.write(bucket=influxdb_bucket, record=data)
+                    print(f"Data written to influxDB: {key}={value}")
+                except ValueError:
+                    print("invalid data format")
+        time.sleep(1)
+
+except KeyboardInterrupt:
+    print("프로그램이 종료되었습니다.")
+finally:
+    ser.close()
