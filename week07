@@ -1,13 +1,11 @@
-#include "LedToggle.h"
+#include <LedToggle.h>
 
-LedToggle::LedToggle(int pin){
-	_pin = pin;
-	_state = false;
-	pinMode(_pin, OUTPUT);
-	digitalWrite(_pin, LOW);
+LedToggle led(LED_BUILTIN);
+
+void setup(){
 }
 
-void LedToggle::toggle(){
-	_state = !_state;
-	digitalWrite(_pin, _state ? HIGH : LOW);
+void loop(){
+  led.toggle();
+  //delay(500);
 }
