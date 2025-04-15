@@ -1,20 +1,16 @@
-int a1 = 2;
-int a2 = 3;
-int a3;
+#ifndef LedToggle_h
+#define LedToggle_h
 
-void setup(){
-  Serial.begin(115200);
-  Serial.println();
+#include "Arduino.h"
 
-  //a1, a2, a3은 인수
-  sum(a1, a2, a3);
-  Serial.println(a3);
-}
+class LedToggle{
+public:
+	LedToggle(int pin);	//생성자
+	void toggle();	//LED 상태 토글
 
-void loop(){
-}
+private:
+	int _pin;
+	bool _state;
+};
 
-//a, b, c는 매개 변수
-void sum(int a, int b, int& c){
-  c = a+b;
-}
+#endif
